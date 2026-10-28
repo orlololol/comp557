@@ -1,0 +1,5 @@
+PyQt5
+moderngl
+numpy
+usd-core
+pyglm

@@ -1,0 +1,280 @@
+// Orlando Qiu
+// Default character: a simple two-link arm (root -> upper_arm -> forearm)
+// All limbs are capsules of radius 0.04. A capsule's total length is height + 2*radius,
+// so a limb of length L uses height = L - 0.08 and its round ends meet exactly at the joints.
+// Every joint sits at the start of its limb; geometry_transform moves the capsule (which
+// trimesh builds centred on the origin along z) so it starts at the joint and extends along
+// -y (legs, arms), +y (spine, head), +x (shoulders) or +z (feet).
+{
+  root: {
+    name: "pelvis",
+    color: [0.1, 0.1, 0.1],
+    local_transform: [
+      [1, 0, 0, 0],
+      [0, 1, 0, 1],
+      [0, 0, 1, 0],
+      [0, 0, 0, 1],
+    ],
+    geometry: { type: "capsule", radius: 0.04, height: 0.16 },
+    geometry_transform: [
+      [0, 0, 1, 0],
+      [0, 1, 0, 0],
+      [-1, 0, 0, 0],
+      [0, 0, 0, 1],
+    ],
+    dofs: ["tx", "ty", "tz", "rz", "ry", "rx"],
+    children: [
+      {
+        name: "spine",
+        color: [0.1, 0.1, 0.1],
+        local_transform: [
+          [1, 0, 0, 0],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1],
+        ],
+        geometry: { type: "capsule", radius: 0.04, height: 0.5 },
+        geometry_transform: [
+          [1, 0, 0, 0],
+          [0, 0, 1, 0.3],
+          [0, -1, 0, 0],
+          [0, 0, 0, 1],
+        ],
+        dofs: ["rz", "ry", "rx"],
+        children: [
+          {
+            name: "head",
+            color: [0.1, 0.1, 0.1],
+            local_transform: [
+              [1, 0, 0, 0],
+              [0, 1, 0, 0.6],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1],
+            ],
+            geometry: { type: "icosphere", radius: 0.15, subdivisions: 3 },
+            geometry_transform: [
+              [1, 0, 0, 0],
+              [0, 1, 0, 0.15],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1],
+            ],
+            // for color customization
+            dofs: ["rz", "ry", "rx", "cr", "cg", "cb", "ca"],
+          },
+          {
+            name: "shoulders",
+            color: [0.1, 0.1, 0.1],
+            local_transform: [
+              [1, 0, 0, 0],
+              [0, 1, 0, 0.55],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1],
+            ],
+            geometry: { type: "capsule", radius: 0.04, height: 0.3 },
+            geometry_transform: [
+              [0, 0, 1, 0],
+              [0, 1, 0, 0],
+              [-1, 0, 0, 0],
+              [0, 0, 0, 1],
+            ],
+            dofs: [],
+            children: [
+              {
+                name: "arm_left",
+                color: [0.1, 0.1, 0.1],
+                local_transform: [
+                  [1, 0, 0, 0.2],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+                geometry: { type: "capsule", radius: 0.04, height: 0.3 },
+                geometry_transform: [
+                  [1, 0, 0, 0],
+                  [0, 0, 1, -0.175],
+                  [0, -1, 0, 0],
+                  [0, 0, 0, 1],
+                ],
+                dofs: ["rz", "ry", "rx"],
+                children: [
+                  {
+                    name: "forearm_left",
+                    color: [0.1, 0.1, 0.1],
+                    local_transform: [
+                      [1, 0, 0, 0],
+                      [0, 1, 0, -0.35],
+                      [0, 0, 1, 0],
+                      [0, 0, 0, 1],
+                    ],
+                    geometry: { type: "capsule", radius: 0.04, height: 0.3 },
+                    geometry_transform: [
+                      [1, 0, 0, 0],
+                      [0, 0, 1, -0.175],
+                      [0, -1, 0, 0],
+                      [0, 0, 0, 1],
+                    ],
+                    dofs: ["rx"],
+                  },
+                ],
+              },
+              {
+                name: "arm_right",
+                color: [0.1, 0.1, 0.1],
+                local_transform: [
+                  [1, 0, 0, -0.2],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+                geometry: { type: "capsule", radius: 0.04, height: 0.3 },
+                geometry_transform: [
+                  [1, 0, 0, 0],
+                  [0, 0, 1, -0.175],
+                  [0, -1, 0, 0],
+                  [0, 0, 0, 1],
+                ],
+                dofs: ["rz", "ry", "rx"],
+                children: [
+                  {
+                    name: "forearm_right",
+                    color: [0.1, 0.1, 0.1],
+                    local_transform: [
+                      [1, 0, 0, 0],
+                      [0, 1, 0, -0.35],
+                      [0, 0, 1, 0],
+                      [0, 0, 0, 1],
+                    ],
+                    geometry: { type: "capsule", radius: 0.04, height: 0.3 },
+                    geometry_transform: [
+                      [1, 0, 0, 0],
+                      [0, 0, 1, -0.175],
+                      [0, -1, 0, 0],
+                      [0, 0, 0, 1],
+                    ],
+                    dofs: ["rx"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "thigh_left",
+        color: [0.1, 0.1, 0.1],
+        local_transform: [
+          [1, 0, 0, 0.1],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1],
+        ],
+        geometry: { type: "capsule", radius: 0.05, height: 0.5 },
+        geometry_transform: [
+          [1, 0, 0, 0],
+          [0, 0, 1, -0.25],
+          [0, -1, 0, 0],
+          [0, 0, 0, 1],
+        ],
+        dofs: ["rz", "ry", "rx"],
+        children: [
+          {
+            name: "shin_left",
+            color: [0.1, 0.1, 0.1],
+            local_transform: [
+              [1, 0, 0, 0],
+              [0, 1, 0, -0.5],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1],
+            ],
+            geometry: { type: "capsule", radius: 0.05, height: 0.5 },
+            geometry_transform: [
+              [1, 0, 0, 0],
+              [0, 0, 1, -0.25],
+              [0, -1, 0, 0],
+              [0, 0, 0, 1],
+            ],
+            dofs: ["rx"],
+            children: [
+              {
+                name: "foot_left",
+                color: [0.1, 0.1, 0.1],
+                local_transform: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, -0.5],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+                geometry: { type: "box", extents: [0.1, 0.05, 0.15] },
+                geometry_transform: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, 0.03],
+                  [0, 0, 1, 0.075],
+                  [0, 0, 0, 1],
+                ],
+                dofs: ["rx"],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "thigh_right",
+        color: [0.1, 0.1, 0.1],
+        local_transform: [
+          [1, 0, 0, -0.1],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1],
+        ],
+        geometry: { type: "capsule", radius: 0.05, height: 0.5 },
+        geometry_transform: [
+          [1, 0, 0, 0],
+          [0, 0, 1, -0.25],
+          [0, -1, 0, 0],
+          [0, 0, 0, 1],
+        ],
+        dofs: ["rz", "ry", "rx"],
+        children: [
+          {
+            name: "shin_right",
+            color: [0.1, 0.1, 0.1],
+            local_transform: [
+              [1, 0, 0, 0],
+              [0, 1, 0, -0.5],
+              [0, 0, 1, 0],
+              [0, 0, 0, 1],
+            ],
+            geometry: { type: "capsule", radius: 0.05, height: 0.5 },
+            geometry_transform: [
+              [1, 0, 0, 0],
+              [0, 0, 1, -0.25],
+              [0, -1, 0, 0],
+              [0, 0, 0, 1],
+            ],
+            dofs: ["rx"],
+            children: [
+              {
+                name: "foot_right",
+                color: [0.1, 0.1, 0.1],
+                local_transform: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, -0.5],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                ],
+                geometry: { type: "box", extents: [0.1, 0.05, 0.15] },
+                geometry_transform: [
+                  [1, 0, 0, 0],
+                  [0, 1, 0, 0.03],
+                  [0, 0, 1, 0.075],
+                  [0, 0, 0, 1],
+                ],
+                dofs: ["rx"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+}

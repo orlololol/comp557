@@ -1,0 +1,4 @@
+polyscope
+trimesh
+json5
+numpy
