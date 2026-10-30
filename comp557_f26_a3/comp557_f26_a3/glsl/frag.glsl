@@ -29,7 +29,7 @@ void main() {
         vec3 specular = pow(NdotH, spec_power) * vec3(0.4); // Subtle white highlight
         color = vec4( ambient + diffuse + specular, 1.0);
     } else if (u_draw_mode == 1) {
-        color = vec4(N * 0.5 + 0.5, 1.0); // Magenta for unimplemented mode
+        color = vec4(N * 0.5 + 0.5, 1.0); // magenta for unimplemented mode
     } else if (u_draw_mode == 2) {
         color = vec4( v_weight, 0, 0, 1.0 );
     } else if (u_draw_mode == 3) {

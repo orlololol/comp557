@@ -26,9 +26,13 @@ out float v_weight;
 
 void main() {
 
-    // TODO Compute the blended skinning matrix for LBS
+    // Compute the blended skinning matrix for LBS
+    mat4 skin_matrix = mat4(0.0);
+    for (int i = 0; i < 4; ++i) {
+        skin_matrix += in_weights_0[i] * u_bone_matrices[ int(in_joints_0[i]) ];
+        skin_matrix += in_weights_1[i] * u_bone_matrices[ int(in_joints_1[i]) ];
+    }
 
-    mat4 skin_matrix = u_bone_matrices[0]; // Arbitrary matrix, replace with your computed skinning matrix;   
 
     // Transform Vertex Position (4D homogeneous point, w = 1.0)
     vec4 local_skinned_pos = skin_matrix * vec4(in_position, 1.0);
@@ -40,7 +44,7 @@ void main() {
 
         v_eye_normal = vec3(0.0, 0.0, 1.0); // Replace with your computed normal
     } else {
-        mat3 normal_matrix = mat3(u_model) * mat3(skin_matrix);
+        mat3 normal_matrix = mat3(u_model) * transpose(inverse(mat3(skin_matrix)));
         v_eye_normal = normalize(mat3(u_view) * normal_matrix * in_normal);
     }
 
