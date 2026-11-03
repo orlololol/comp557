@@ -40,9 +40,25 @@ void main() {
     v_eye_position = (u_view * world_pos).xyz;
 
     if (u_correct_normals) {
-        // TODO: Compute correct normals!
+        // Compute correct normals!
+        // full Jacobian
 
-        v_eye_normal = vec3(0.0, 0.0, 1.0); // Replace with your computed normal
+        mat3 Jm = mat3(skin_matrix);
+        vec3 p_skinned = local_skinned_pos.xyz;
+        for (int i = 0; i < 4; ++i) {
+            int j = int(in_joints_0[i]);
+            vec3 g = vec3(in_grad_weights_0[0][i], in_grad_weights_0[1][i], in_grad_weights_0[2][i]);
+            vec3 Tp = (u_bone_matrices[j] * vec4(in_position, 1.0)).xyz;
+            Jm += outerProduct(Tp - p_skinned, g);
+        }
+        for (int i = 0; i < 4; ++i) {
+            int j = int(in_joints_1[i]);
+            vec3 g = vec3(in_grad_weights_1[0][i], in_grad_weights_1[1][i], in_grad_weights_1[2][i]);
+            vec3 Tp = (u_bone_matrices[j] * vec4(in_position, 1.0)).xyz;
+            Jm += outerProduct(Tp - p_skinned, g);
+        }
+        vec3 n = transpose(inverse(Jm)) * in_normal;
+        v_eye_normal = normalize(mat3(u_view) * mat3(u_model) * n);
     } else {
         mat3 normal_matrix = mat3(u_model) * transpose(inverse(mat3(skin_matrix)));
         v_eye_normal = normalize(mat3(u_view) * normal_matrix * in_normal);

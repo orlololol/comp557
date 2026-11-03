@@ -142,9 +142,8 @@ class Asset:
 
 
 	def compute_weight_gradients(self):
-		''' TODO: compute the gradient of the skinning weights for each vertex '''
+		''' compute the gradient of the skinning weights for each vertex '''
 		# for every vertex and bone, store gradient of w_bone in self.W_gradients[v, slot], (nV, 8, 3) array
-		# GPU packing is already done, just compute gradients
 		nV = self.V.shape[0]
 		nBones = int(self.J.max()) + 1
 		Wd = np.zeros((nV, nBones))

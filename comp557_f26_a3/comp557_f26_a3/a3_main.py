@@ -125,7 +125,7 @@ vm.resize(1000, 700)
 vm.show() # needed to have a valid OpenGL context and so we can use render_ctx below
 
 win = QtWidgets.QMainWindow()
-win.setWindowTitle("COMP557 Assignment 3 - YOUR NAME AND ID HERE") # TODO Add your name and ID !
+win.setWindowTitle("COMP557 Assignment 3 - Orlando Qiu 261175512") # Add your name and ID !
 central = QtWidgets.QWidget()
 layout = QtWidgets.QHBoxLayout(central)
 layout.addWidget(vm, stretch=3)

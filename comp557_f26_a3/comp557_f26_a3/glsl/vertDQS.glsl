@@ -59,15 +59,13 @@ void addInfluence(int j, float w, vec4 ref, inout vec4 b_r, inout vec4 b_d) {
 
 void main() {
 
-    // TODO Compute the blended dual quaternion for skinning
+    // Compute the blended dual quaternion for skinning
     // You may convert that dual quaternion into a 4x4 matrix with the provided dualQuaternionToMat4 function, 
     // Or otherwise, make the code below more efficienty by use the method for transforming points and vectors seen in class.
 
     vec4 ref = u_bone_q_r[ int(in_joints_0[0]) ];
     vec4 b_r = vec4(0.0);
     vec4 b_d = vec4(0.0);
-    vec4 qr = vec4(0.0);
-    vec4 qd = vec4(0.0);
 
     for (int i = 0; i < 4; ++i) {
         addInfluence(int(in_joints_0[i]), in_weights_0[i], ref, b_r, b_d);
@@ -84,16 +82,30 @@ void main() {
     v_eye_position = (u_view * world_pos).xyz;
 
     if (u_correct_normals) {
-        // TODO: Compute correct normals!
+        // Compute correct normals!
 
-        v_eye_normal = vec3(0.0, 0.0, 1.0); // Replace with your computed normal
+        mat3 Jm = mat3(skin_matrix);
+        vec3 p_skinned = local_skinned_pos.xyz;
+        for (int i = 0; i < 4; ++i) {
+            int j = int(in_joints_0[i]);
+            vec3 g = vec3(in_grad_weights_0[0][i], in_grad_weights_0[1][i], in_grad_weights_0[2][i]);
+            vec3 Tp = (dualQuaternionToMat4(u_bone_q_r[j], u_bone_q_d[j]) * vec4(in_position, 1.0)).xyz;
+            Jm += outerProduct(Tp - p_skinned, g);
+        }
+        for (int i = 0; i < 4; ++i) {
+            int j = int(in_joints_1[i]);
+            vec3 g = vec3(in_grad_weights_1[0][i], in_grad_weights_1[1][i], in_grad_weights_1[2][i]);
+            vec3 Tp = (dualQuaternionToMat4(u_bone_q_r[j], u_bone_q_d[j]) * vec4(in_position, 1.0)).xyz;
+            Jm += outerProduct(Tp - p_skinned, g);
+        }
+        vec3 n = transpose(inverse(Jm)) * in_normal;
+        v_eye_normal = normalize(mat3(u_view) * mat3(u_model) * n);
     } else {
         mat3 normal_matrix = mat3(u_model) * transpose(inverse(mat3(skin_matrix)));
         v_eye_normal = normalize(mat3(u_view) * normal_matrix * in_normal);
     }
 
     // copy the weight and weight gradient for the selected bone to the fragment shader for visualization 
-    // (only used when the draw mode is set to visualize weights or weight gradients)
     v_grad_weight = vec3(0.0);
     v_weight = 0.0;
     for (int i = 0; i < 4; ++i) {
