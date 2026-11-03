@@ -45,13 +45,38 @@ mat4 dualQuaternionToMat4(vec4 q_r, vec4 q_d) {
     return m;
 }
 
+// add bone j's dual quaternion with weight w to the blend, flipped into ref's hemisphere
+void addInfluence(int j, float w, vec4 ref, inout vec4 b_r, inout vec4 b_d) {
+    vec4 qr = u_bone_q_r[j];
+    vec4 qd = u_bone_q_d[j];
+    if (dot(qr, ref) < 0.0) {
+        qr = -qr;
+        qd = -qd;
+    }
+    b_r += w * qr;
+    b_d += w * qd;
+}
+
 void main() {
 
     // TODO Compute the blended dual quaternion for skinning
     // You may convert that dual quaternion into a 4x4 matrix with the provided dualQuaternionToMat4 function, 
     // Or otherwise, make the code below more efficienty by use the method for transforming points and vectors seen in class.
 
-    mat4 skin_matrix = dualQuaternionToMat4(u_bone_q_r[0],u_bone_q_d[0]); // Arbitrary matrix, replace with your computed skinning matrix;   
+    vec4 ref = u_bone_q_r[ int(in_joints_0[0]) ];
+    vec4 b_r = vec4(0.0);
+    vec4 b_d = vec4(0.0);
+    vec4 qr = vec4(0.0);
+    vec4 qd = vec4(0.0);
+
+    for (int i = 0; i < 4; ++i) {
+        addInfluence(int(in_joints_0[i]), in_weights_0[i], ref, b_r, b_d);
+        addInfluence(int(in_joints_1[i]), in_weights_1[i], ref, b_r, b_d);
+    }
+    float len = length(b_r);
+    b_r /= len;
+    b_d /= len;
+    mat4 skin_matrix = dualQuaternionToMat4(b_r, b_d);
 
     // 2. Transform Vertex Position (4D homogeneous point, w = 1.0)
     vec4 local_skinned_pos = skin_matrix * vec4(in_position, 1.0);
@@ -63,7 +88,7 @@ void main() {
 
         v_eye_normal = vec3(0.0, 0.0, 1.0); // Replace with your computed normal
     } else {
-        mat3 normal_matrix = mat3(u_model) * mat3(skin_matrix);
+        mat3 normal_matrix = mat3(u_model) * transpose(inverse(mat3(skin_matrix)));
         v_eye_normal = normalize(mat3(u_view) * normal_matrix * in_normal);
     }
 
