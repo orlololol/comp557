@@ -1,3 +1,5 @@
+from ast import For
+
 from pygltflib import GLTF2
 import moderngl as mgl
 from pathlib import Path
@@ -141,8 +143,58 @@ class Asset:
 
 	def compute_weight_gradients(self):
 		''' TODO: compute the gradient of the skinning weights for each vertex '''
-		pass
+		# for every vertex and bone, store gradient of w_bone in self.W_gradients[v, slot], (nV, 8, 3) array
+		# GPU packing is already done, just compute gradients
+		nV = self.V.shape[0]
+		nBones = int(self.J.max()) + 1
+		Wd = np.zeros((nV, nBones))
+		for k in range(4):
+			np.add.at(Wd, (np.arange(nV), self.J[:, k]), self.W[:, k])
 
+		# per face gradients
+		p0, p1, p2 = self.V[self.F[:, 0]], self.V[self.F[:, 1]], self.V[self.F[:, 2]]
+		# compute face normals and areas
+		face_normals = np.cross(p1 - p0, p2 - p0)
+		face_areas = np.linalg.norm(face_normals, axis=1) # twice the area of the triangle
+		face_normals /= np.maximum(face_areas[:, np.newaxis], 1e-8) # normalize, avoid division by zero
+		# compute gradients of barycentric coordinates
+		e0 = p2 - p1
+		e1 = p0 - p2
+		e2 = p1 - p0
+		G0 = np.cross(face_normals, e0) / np.maximum(face_areas[:, np.newaxis], 1e-8)
+		G1 = np.cross(face_normals, e1) / np.maximum(face_areas[:, np.newaxis], 1e-8)
+		G2 = np.cross(face_normals, e2) / np.maximum(face_areas[:, np.newaxis], 1e-8)
+
+		# compute weight gradients for each bone
+		G = np.stack([G0, G1, G2], axis=1) # (nF, 3, 3)
+		grad_f = np.einsum('fkb,fkc->fbc', Wd[self.F], G) # (nF, nBones, 3)
+
+		# average gradients at vertices, weighted by areas
+		Gv = np.zeros((nV, nBones, 3))
+		area_sum = np.zeros(nV)
+		for k in range(3):
+			np.add.at(Gv, self.F[:, k], face_areas[:, None, None] * grad_f)
+			np.add.at(area_sum, self.F[:, k], face_areas)
+
+		Gv /= np.maximum(area_sum, 1e-12)[:, None, None]
+
+		# save results into the 8 slots
+		for v in range(nV):
+			# existing slots
+			for s in range(8):
+				if self.W[v, s] > 0:
+					bone_index = self.J[v, s]
+					self.W_gradients[v, s] = Gv[v, bone_index]
+
+			# extra bones
+			free_slots = list(np.where(self.W[v] == 0)[0]) # computed once, before the loop over b
+			existing_bones = set(self.J[v, self.W[v] > 0])
+			for b in range(nBones):
+				if np.linalg.norm(Gv[v, b]) > 0 and b not in existing_bones and free_slots:
+					s = free_slots.pop(0) # take the first free slot and remove it
+					self.J[v, s] = b
+					self.W_gradients[v, s] = Gv[v, b]
+					existing_bones.add(b)
 
 	def check_weight_gradients(self):
 		# Check the sum of gradients across all bones for each vertex
