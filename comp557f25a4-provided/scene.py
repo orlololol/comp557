@@ -61,7 +61,8 @@ class Scene:
 
         if self.texture_data.shape[2] != texture_data.shape[2] or self.texture_data.shape[1] != texture_data.shape[1] or self.texture_data.shape[0] < texture_data.shape[0]:
             print("Warning: reallocating texture_data field to match loaded textures")
-            self.texture_data = ti.Vector.field(3, dtype=ti.f32, shape=(texture_data.shape[0], texture_data.shape[1]))
+            # fix from template
+            self.texture_data = ti.Vector.field(3, dtype=ti.f32, shape=(texture_data.shape[0], texture_data.shape[1], texture_data.shape[2]))
         print("Texture data shape:", texture_data.shape, "field shape:", self.texture_data.shape)
         self.texture_data.from_numpy(texture_data)
 
@@ -115,10 +116,12 @@ class Scene:
         print("done with lights")
 
         # TODO: should check that the fields are actually big enough!
-        if (self.meshes_verts.shape[0] < meshes_verts.shape[0]):
+        # fix from template
+        if self.meshes_verts.shape[0] != meshes_verts.shape[0] and meshes_verts.shape[0] > 0:
             print("Warning: reallocating meshes_verts field to larger size")
             self.meshes_verts = ti.Vector.field(3, shape=(meshes_verts.shape[0]), dtype=float)
-        if (self.meshes_faces.shape[0] < meshes_faces.shape[0]):
+        # fix from template
+        if self.meshes_faces.shape[0] != meshes_faces.shape[0] and meshes_faces.shape[0] > 0:
             print("Warning: reallocating meshes_faces field to larger size")
             self.meshes_faces = ti.Vector.field(3, shape=(meshes_faces.shape[0]), dtype=int)
         if meshes_verts.shape[0] > 0: # only copy if there actually are meshes!
