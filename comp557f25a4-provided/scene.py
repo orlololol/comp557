@@ -1,0 +1,209 @@
+import geometry as geom
+from helperclasses import Ray, Intersection, Light, Material
+from camera import Camera
+
+import numpy as np
+
+import taichi as ti
+import taichi.math as tm
+
+shadow_epsilon = 10**(-2)
+
+@ti.data_oriented
+class Scene:
+    def __init__( self ):
+        ## Allocate empty fields with default sizes    
+        # Taichi does not accept a zero-length field, so we create a field of size at least one if the list is empty.
+        # Moreover, different sized fields will cause recompilation when used in kernels, so minimums are set to try
+        # to ensure kernel reuse.  Finally, the count fields to track the number of objects must be put into fields
+        # to hide the value from the hash used for compilation caching. 
+        
+        self.nb_spheres = ti.field(dtype=int, shape=())        
+        self.spheres = geom.Sphere.field(shape=(10))
+        self.nb_planes = ti.field(dtype=int, shape=())
+        self.planes = geom.Plane.field(shape=(1))
+        self.nb_aaboxes = ti.field(dtype=float, shape=())
+        self.aaboxes = geom.AABox.field(shape=(30))
+        self.nb_meshes = ti.field(dtype=int, shape=())
+        self.meshes = geom.Mesh.field(shape=(5))
+        self.nb_lights = ti.field(dtype=int, shape=())
+        self.lights = Light.field(shape=(5))
+        self.meshes_verts = ti.Vector.field(3, shape=(10000), dtype=float)
+        self.meshes_faces = ti.Vector.field(3, shape=(10000), dtype=int)
+
+        self.iter_counter = ti.field(dtype=float, shape=())
+
+        # Sizes ideally should match exactly the numpy stuff we plan to load in.
+        self.texture_data = ti.Vector.field(3, dtype=ti.f32, shape=(1,256,256))
+        self.texture_sizes = ti.field(ti.i32, shape=(1,2)) # could be a vector field instead
+
+        self.material_field = Material.field(shape=(20))
+
+        self.image = ti.Vector.field( n=3, dtype=float, shape=(512, 700) )
+
+
+    def load(
+            self,
+            camera: Camera,
+            ambient: tm.vec3,
+            texture_data: np.array, # NxWxHx3
+            texture_sizes: np.array,
+            materials,
+            objects,
+            lights,
+            meshes_verts: np.array,
+            meshes_faces: np.array,
+    ):
+        self.camera = camera
+        self.ambient = ambient  # ambient lighting
+        
+        print("Texture data shape:", texture_data.shape, "field shape:", self.texture_data.shape)
+
+        if self.texture_data.shape[2] != texture_data.shape[2] or self.texture_data.shape[1] != texture_data.shape[1] or self.texture_data.shape[0] < texture_data.shape[0]:
+            print("Warning: reallocating texture_data field to match loaded textures")
+            self.texture_data = ti.Vector.field(3, dtype=ti.f32, shape=(texture_data.shape[0], texture_data.shape[1]))
+        print("Texture data shape:", texture_data.shape, "field shape:", self.texture_data.shape)
+        self.texture_data.from_numpy(texture_data)
+
+        print("now doing texture sizes")
+        if self.texture_sizes.shape[0] != texture_sizes.shape[0]:
+            print("Warning: reallocating texture_sizes field to match loaded number of textures")
+            self.texture_sizes = ti.field(ti.i32, shape=texture_sizes.shape)
+        self.texture_sizes.from_numpy(texture_sizes)
+
+        print("Doing materials")
+        if len(materials) > self.material_field.shape[0]:
+            print("Warning: reallocating material_field to larger size")
+            self.material_field = Material.field(shape=(len(materials)))
+        for i,m in enumerate(materials): self.material_field[i] = m
+
+        self.nb_spheres[None] = len(objects["sphere"])        
+        if self.nb_spheres[None] > self.spheres.shape[0]:
+            print("Warning: reallocating spheres field to larger size")
+            self.spheres = geom.Sphere.field(shape=(self.nb_spheres[None]))
+        for i,s in enumerate(objects["sphere"]): self.spheres[i] = s
+        
+        self.nb_planes[None] = len(objects["plane"])
+        if self.nb_planes[None] > self.planes.shape[0]:
+            print("Warning: reallocating planes field to larger size")
+            self.planes = geom.Plane.field(shape=(self.nb_planes[None]))
+        for i,p in enumerate(objects["plane"]): self.planes[i] = p
+
+        self.nb_aaboxes[None] = len(objects["box"])
+        if self.nb_aaboxes[None] > self.aaboxes.shape[0]:
+            print("Warning: reallocating aaboxes field to larger size")
+            self.aaboxes = geom.AABox.field(shape=(self.nb_aaboxes[None]))
+        for i,a in enumerate(objects["box"]): self.aaboxes[i] = a
+
+        self.nb_meshes[None] = len(objects["mesh"])
+        if self.nb_meshes[None] > self.meshes.shape[0]:
+            print("Warning: reallocating meshes field to larger size")
+            self.meshes = geom.Mesh.field(shape=(self.nb_meshes[None]))
+        for i,m in enumerate(objects["mesh"]): self.meshes[i] = m
+
+        print("done with geometry")     
+
+        self.nb_lights[None] = len(lights)
+        self.lights = Light.field(shape=max(5, self.nb_lights[None]))
+        if self.nb_lights[None] > self.lights.shape[0]:
+            print("Warning: reallocating lights field to larger size")
+            self.lights = Light.field(shape=(self.nb_lights[None]))
+        # TODO: Does this work?  it seems preferable to the for enumerate loop
+        #self.lights.copy_from(lights)
+        for i,l in enumerate(lights): self.lights[i] = l
+
+        print("done with lights")
+
+        # TODO: should check that the fields are actually big enough!
+        if (self.meshes_verts.shape[0] < meshes_verts.shape[0]):
+            print("Warning: reallocating meshes_verts field to larger size")
+            self.meshes_verts = ti.Vector.field(3, shape=(meshes_verts.shape[0]), dtype=float)
+        if (self.meshes_faces.shape[0] < meshes_faces.shape[0]):
+            print("Warning: reallocating meshes_faces field to larger size")
+            self.meshes_faces = ti.Vector.field(3, shape=(meshes_faces.shape[0]), dtype=int)
+        if meshes_verts.shape[0] > 0: # only copy if there actually are meshes!
+            self.meshes_verts.from_numpy(meshes_verts)
+            self.meshes_faces.from_numpy(meshes_faces)
+
+        if self.image.shape[0] != self.camera.width or self.image.shape[1] != self.camera.height:
+            print("Warning: reallocating image field to match camera dimensions")
+            self.image = ti.Vector.field( n=3, dtype=float, shape=(self.camera.width, self.camera.height) )
+
+        self.iter_counter[None] = 0.0
+
+        print("Scene loaded into Scene object.")
+
+    @ti.kernel
+    def render( self ):
+        self.iter_counter[None] += 1.0
+        for x,y in ti.ndrange(self.camera.width, self.camera.height):
+            if (y == x) and x%10 == 0: print(".",end='')
+            ray = self.camera.create_ray( x, y )
+            intersect = self.intersect_scene(ray, 0, float('inf'))
+            sample_colour = tm.vec3(0, 0, 0) # background colour
+            if intersect.is_hit:
+                sample_colour = self.compute_shading(intersect, ray)
+            self.image[x,y] += (sample_colour - self.image[x,y]) / self.iter_counter[None] 
+        print() # end of line after one dot per 10 rows
+
+
+    @ti.func
+    def intersect_scene(self, ray: Ray, t_min: float, t_max: float) -> Intersection:
+        best = Intersection() # default is no intersection (is_hit = False)        
+        ti.loop_config(serialize=True) 
+        for i in range(self.nb_spheres[None]):
+            hit = geom.intersectSphere(self.spheres[i], ray, t_min, t_max )
+            if hit.is_hit: best = hit; t_max = hit.t # keep best hit only
+        ti.loop_config(serialize=True) 
+        for i in range(self.nb_planes[None]):
+            hit = geom.intersectPlane(self.planes[i], ray, t_min, t_max )
+            if hit.is_hit: best = hit; t_max = hit.t                
+        ti.loop_config(serialize=True) 
+        for i in range(self.nb_aaboxes[None]):
+            hit = geom.intersectAABox(self.aaboxes[i], ray, t_min, t_max )
+            if hit.is_hit: best = hit; t_max = hit.t
+        ti.loop_config(serialize=True) 
+        for i in range(self.nb_meshes[None]):
+            hit = geom.intersectMesh(self.meshes[i], self.meshes_verts, self.meshes_faces, ray, t_min, t_max)
+            if hit.is_hit: best = hit; t_max = hit.t
+        return best
+
+
+    @ti.func
+    def compute_shading(self, intersect: Intersection, ray: Ray) -> tm.vec3:
+        sample_colour = tm.vec3(0, 0, 0)
+
+        material = self.material_field[intersect.mat]
+
+        kd = material.diffuse
+        if material.texture_id != -1:
+            u = intersect.texture_coords.x
+            v = intersect.texture_coords.y
+            kd *= self.getTextureColour( material.texture_id, u, v )
+
+        # Ambient shading
+        sample_colour += self.ambient * kd
+
+        intersect.normal = tm.normalize(intersect.normal)
+
+        ti.loop_config(serialize=True) 
+        for l in range(self.nb_lights[None]):
+            
+            # TODO: Objective 3: Implement diffuse and specular shading
+            
+            # TODO: Objective 6: Implement shadow rays
+
+            continue
+
+        return sample_colour
+    
+    @ti.func
+    def getTextureColour( self, texture_id: int, u: float, v: float ) -> tm.vec3:
+        tex_width = self.texture_sizes[texture_id, 0]
+        tex_height = self.texture_sizes[texture_id, 1]
+        u = u - tm.floor(u) # wrap!
+        v = v - tm.floor(v)
+        x = ti.cast(u * tex_width, ti.i32) % tex_width
+        y = ti.cast(v * tex_height, ti.i32) % tex_height
+        return self.texture_data[texture_id,y,x] # or is it x,y?  
+    

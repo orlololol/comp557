@@ -1,0 +1,30 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": 16,
+  "ambient": [1, 1, 1],
+  "camera": {
+    "position": [0.0, 2.0, 20.0],
+    "lookAt": [0.0, 0.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0
+  },
+  "textures": [{ "name": "rg", "filepath": "textures/red-green-2x2.png" }],
+  "materials": [
+    {
+      "name": "red-green",
+      "texture": "rg",
+      "specular": [0, 0, 0],
+      "shininess": 0
+    }
+  ],
+  "objects": [
+    {
+      "name": "plane",
+      "type": "plane",
+      "normal": [0.0, 1.0, 0.0],
+      "position": [0.0, 0.0, 0.0],
+      "material": "red-green"
+    }
+  ]
+}

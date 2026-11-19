@@ -1,0 +1,22 @@
+{
+"resolution": [960, 540],
+"AA_jitter": true, 
+"AA_samples": 16,
+"ambient": [0.1, 0.1, 0.1],
+"camera": { "position": [ 0.0, 2.0, 10.0 ], "lookAt": [ 0.0, 0.0, -10.0 ], "up": [ 0.0, 1.0, 0.0 ], "fovy": 45.0 },
+"textures": [
+    { "name": "checker_texture", "filepath": "textures/blue-green-2x2.png" }
+],
+"materials": [
+    { "name": "bluegreen",  "texture": "checker_texture", "specular": [0.5, 0.5, 0.5], "shininess": 16 },
+    { "name": "red",   "diffuse": [1.0, 0.0, 0.0], "specular": [0.5, 0.5, 0.5], "shininess": 16 }
+],    
+"objects": [
+    { "name": "plane", "type": "plane", "normal": [0.0, 1.0, 0.0], "position": [0.0, 0.0, 0.0], "material": "bluegreen" },
+    { "name": "sphere0", "type": "sphere", "radius": 0.1, "position": [0.0, 0.0, 0.0], "material": "red" },
+    { "name": "sphere1", "type": "sphere", "radius": 0.1, "position": [1.0, 0.0, 1.0], "material": "red" }        
+],
+"lights": [
+    { "name": "light", "type": "point", "position": [0.0, 2.0, 0.0], "colour": [0.8, 0.6, 0.6], "power": 3, "attenuation": [1.0, 0.0, 0.0] }
+]
+}

@@ -1,0 +1,46 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": -1,
+  "ambient": [0.2, 0.2, 0.2],
+  "camera": {
+    "position": [0.0, 2.0, 10.0],
+    "lookAt": [0.0, 0.0, -10.0],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0
+  },
+  "textures": [{ "name": "test_texture", "filepath": "textures/uv_test.png" }],
+  "materials": [
+    {
+      "name": "test-uv",
+      "texture": "test_texture",
+      "specular": [0.5, 0.5, 0.5],
+      "shininess": 16
+    }
+  ],
+  "objects": [
+    {
+      "name": "plane",
+      "type": "plane",
+      "normal": [0.0, 1.0, 0.0],
+      "position": [0.0, 0.0, 0.0],
+      "material": "test-uv"
+    }
+  ],
+  "lights": [
+    {
+      "name": "light1",
+      "type": "point",
+      "position": [10.0, 10.0, 10.0],
+      "colour": [0.8, 0.8, 0.8],
+      "power": 1.0
+    },
+    {
+      "name": "light2",
+      "type": "point",
+      "position": [0.0, 2.0, 0.0],
+      "colour": [0.8, 0.6, 0.6],
+      "power": 2
+    }
+  ]
+}
