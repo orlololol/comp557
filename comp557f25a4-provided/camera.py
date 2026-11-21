@@ -1,4 +1,6 @@
 
+from numpy import tan
+
 from helperclasses import Ray
 import taichi as ti
 from pyglm import glm
@@ -30,18 +32,21 @@ class Camera:
 		self.jitter = jitter
 		self.samples = samples
 
-		# TODO: Objective 1: Compute camera frame basis vectors, and top bottom left right for ray generation
+		# Objective 1: Compute camera frame basis vectors, and top bottom left right for ray generation
 		# NOTE: glm vectors are passed in to permit the work to be done here in python, but stored vectors must be tm.vec3
 
 
 		# Compute proper values below!
-		self.top = 1
-		self.bottom = -1
-		self.left = -1
-		self.right = 1
-		self.u = tm.vec3(1,0,0)
-		self.v = tm.vec3(0,0,0)
-		self.w = tm.vec3(0,0,1)
+		self.top = tan(glm.radians(fovy)/2.0) * self.distance_to_plane
+		self.bottom = -tan(glm.radians(fovy)/2.0) * self.distance_to_plane
+		self.left = -self.top * (width/height)
+		self.right = -self.left
+		w = glm.normalize(eye_position - lookat)
+		u = glm.normalize(glm.cross(up, w))
+		v = glm.normalize(glm.cross(w, u))
+		self.w = tm.vec3(w)
+		self.u = tm.vec3(u)
+		self.v = tm.vec3(v)
 		self.eye_position = tm.vec3(eye_position.x, eye_position.y, eye_position.z)
 
 
@@ -60,7 +65,23 @@ class Camera:
 		'''
 
 		
-		# TODO: Objective 1: Generate ray from camera through pixel (col, row) with jittering
+		# Objective 1: Generate ray from camera through pixel (col, row) with jittering
+		# s = e + uu + vv - dw
+		# p = e
+		# d = s - e
+		# ray = p+td
 
+		# jitter
+		offset_x = 0.5
+		offset_y = 0.5
+		if self.jitter:
+			offset_x = ti.random()
+			offset_y = ti.random()
+			
 
-		return Ray( self.eye_position, tm.vec3(0,0,-1) )  # temporary ray
+		s = self.left + (self.right - self.left) * (x + offset_x) / self.width
+		t = self.bottom + (self.top - self.bottom) * (y + offset_y) / self.height
+		point = self.eye_position + s * self.u + t * self.v - self.w * self.distance_to_plane
+		d = tm.normalize(point - self.eye_position)
+
+		return Ray( self.eye_position, d )  # temporary ray
