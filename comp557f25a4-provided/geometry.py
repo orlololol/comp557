@@ -35,6 +35,25 @@ def intersectSphere(sphere: Sphere, ray: Ray, t_min: float, t_max: float) -> Int
 
     # TODO: Objective 2: Implement ray-sphere intersection
 
+    a = tm.dot(ray.direction, ray.direction)
+    b = 2 * tm.dot(ray.direction, ray.origin)
+    c = tm.dot(ray.origin, ray.origin) - sphere.radius * sphere.radius
+    discriminant = b * b - 4 * a * c
+    if discriminant >= 0:
+        
+        t1 = (-b - ti.sqrt(discriminant)) / (2 * a)
+        t2 = (-b + ti.sqrt(discriminant)) / (2 * a)
+        if t1 >= t_min and t1 <= t_max:
+            hit.is_hit = True
+            hit.t = t1
+        elif t2 >= t_min and t2 <= t_max:
+            hit.is_hit = True
+            hit.t = t2
+
+        if hit.is_hit:
+            hit.position = getRayPoint(ray, hit.t)
+            hit.normal = tm.normalize(hit.position)
+            hit.mat = sphere.material_id
 
     return hit
 
