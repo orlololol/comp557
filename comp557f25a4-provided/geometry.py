@@ -127,8 +127,42 @@ class AABox:
 def intersectAABox(aabox: AABox, ray: Ray, t_min: float, t_max: float) -> Intersection:
     hit = Intersection() # default is no intersection (is_hit = False)
 
-    # TODO: Objective 7: Implement ray-box intersection
+    # Objective 7: Implement ray-box intersection
+    ray = changeRayFrame(ray, aabox.M_inv) # transform ray to local space of box
 
+    # Calculate intersection with the box
+    t0 = (aabox.minpos - ray.origin) / ray.direction
+    t1 = (aabox.maxpos - ray.origin) / ray.direction
+
+    # Ensure t0 is the smaller value and t1 is the larger value
+    t0, t1 = ti.min(t0, t1), ti.max(t0, t1)
+
+    # Find the intersection with the box
+    t_near = ti.max(t0.x, t0.y, t0.z)
+    t_far = ti.min(t1.x, t1.y, t1.z)
+
+    if t_near <= t_far:
+        if t_min <= t_near <= t_max:
+            hit.t = max(t_near, t_min)
+            hit.is_hit = True
+        elif t_min <= t_far <= t_max:
+            hit.t = max(t_far, t_min)
+            hit.is_hit = True
+
+    if hit.is_hit:
+        hit.position = getRayPoint(ray, hit.t)
+        p = hit.position
+        # determine which face was hit to compute the normal
+        epsilon = 1e-5
+        n = tm.vec3(0, 0, 0)
+        for i in range(3): # i = 0(x), 1(y), 2(z)
+            if abs(p[i] - aabox.minpos[i]) < epsilon:
+                n[i] = -1.0 # on the min face
+            elif abs(p[i] - aabox.maxpos[i]) < epsilon:
+                n[i] = 1.0 # on the max face
+        hit.normal = n
+        hit.mat = aabox.material_id
+        hit = changeIntersectFrame(hit, aabox.M, aabox.M_inv) # transform intersection back to world space
 
     return hit
 
