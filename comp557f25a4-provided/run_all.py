@@ -10,5 +10,5 @@ if not scene_files:
 else:
     for scene in sorted(scene_files):
         print(f"\n--- Running: {scene} ---")
-        # fix from template
+        # fix from template since im on windows and the template uses linux commands
         subprocess.run([sys.executable, "main.py", "-i", scene])
