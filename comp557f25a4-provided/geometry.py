@@ -186,7 +186,45 @@ def intersectMesh(mesh: Mesh,                  # data for this mesh (start face 
     
     out_intersect = Intersection() # default is no intersection (is_hit = False)
 
-    # TODO: Objective 8: Implement ray-mesh intersection
+    # Objective 8: Implement ray-mesh intersection
+    ray = changeRayFrame(ray, mesh.M_inv) # transform ray to local space of mesh
+    # for each face in mesh's range
+    for i in range(mesh.faces_ids_start, mesh.faces_ids_start + mesh.faces_ids_count):
+        face = meshes_faces[i]
+        v0 = meshes_verts[face.x]
+        v1 = meshes_verts[face.y]
+        v2 = meshes_verts[face.z]
 
+        # Cramer's rule
+        col1 = v0 - v1
+        col2 = v0 - v2
+        col3 = ray.direction
+        rhs = v0 - ray.origin
 
+        detA = tm.dot(col1, tm.cross(col2, col3))
+        if abs(detA) < EPSILON:
+            continue  # Ray is parallel to the triangle
+
+        beta = (tm.dot(rhs, tm.cross(col2, col3)) / detA)
+        gamma = (tm.dot(col1, tm.cross(rhs, col3)) / detA)
+        t = (tm.dot(col1, tm.cross(col2, rhs)) / detA)
+
+        # reject if the hit is outside the triangle or range
+        if beta < 0 or beta > 1 - gamma:
+            continue
+        if gamma < 0 or gamma > 1:
+            continue
+        if t < t_min or t > t_max:
+            continue
+
+        if t_min <= t <= t_max and (not out_intersect.is_hit or t < out_intersect.t):
+            out_intersect.is_hit = True
+            out_intersect.t = t
+            out_intersect.position = getRayPoint(ray, t)
+            out_intersect.normal = tm.normalize(tm.cross(col1, col2))
+            out_intersect.mat = mesh.material_id
+            out_intersect.texture_coords = tm.vec3(beta, gamma, 0.0)  # barycentric coordinates as texture coords
+
+    if out_intersect.is_hit:
+        out_intersect = changeIntersectFrame(out_intersect, mesh.M, mesh.M_inv) # transform intersection back to world space
     return out_intersect
