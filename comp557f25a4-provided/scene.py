@@ -8,6 +8,7 @@ import taichi as ti
 import taichi.math as tm
 
 shadow_epsilon = 10**(-2)
+MAX_BOUNCES = 5
 
 @ti.data_oriented
 class Scene:
@@ -142,10 +143,19 @@ class Scene:
         for x,y in ti.ndrange(self.camera.width, self.camera.height):
             if (y == x) and x%10 == 0: print(".",end='')
             ray = self.camera.create_ray( x, y )
-            intersect = self.intersect_scene(ray, 0, float('inf'))
             sample_colour = tm.vec3(0, 0, 0) # background colour
-            if intersect.is_hit:
-                sample_colour = self.compute_shading(intersect, ray)
+            throughput = 1.0
+            t_min = 0.0 # 0 from the camera ray from step4
+            for bounce in range(MAX_BOUNCES): # max bounces
+                hit = self.intersect_scene(ray, t_min, float('inf'))
+                if not hit.is_hit: break # no more intersections, so break out of the loop
+                sample_colour += throughput * self.compute_shading(hit, ray)
+                throughput *= self.material_field[hit.mat].reflectivity
+                if throughput < 0.01: break # terminate if throughput is too low
+                ray.origin = hit.position
+                ray.direction = tm.reflect(ray.direction, hit.normal) # reflect the ray direction
+                t_min = shadow_epsilon # set t_min for the next intersection test
+
             self.image[x,y] += (sample_colour - self.image[x,y]) / self.iter_counter[None] 
         print() # end of line after one dot per 10 rows
 

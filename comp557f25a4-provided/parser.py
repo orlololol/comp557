@@ -108,8 +108,10 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
         mat_diffuse = tm.vec3(1,1,1) if "diffuse" not in material else tm.vec3(material["diffuse"])
         mat_specular = tm.vec3(0,0,0) if "specular" not in material else tm.vec3(material["specular"])
         mat_shininess = 0 if "shininess" not in material else material["shininess"]
+        mat_reflectivity = 0 if "reflectivity" not in material else material["reflectivity"]
         material_id_by_name[mat_name] = len(materials)  
-        materials.append(Material(mat_texture_id, mat_diffuse, mat_specular, mat_shininess))
+
+        materials.append(Material(mat_texture_id, mat_diffuse, mat_specular, mat_shininess, mat_reflectivity))
 
     # load geometires
     objects = {"sphere": [],
@@ -210,7 +212,11 @@ def load_geometry(geometry, material_id_by_name, M_parent: tm.mat4 ):
                                                                       faces[i, 1] + meshes_total_nb_verts,
                                                                       faces[i, 2] + meshes_total_nb_verts))
         # NOTE: an opportunity to transform the verts of the mesh rather than transforming the ray later
-        mesh = geom.Mesh(material_id, meshes_total_nb_faces, len(faces), M, M_inv)
+        bmin = np.min(verts, axis=0)
+        bmax = np.max(verts, axis=0)
+        bbox_min = tm.vec3(bmin[0], bmin[1], bmin[2])
+        bbox_max = tm.vec3(bmax[0], bmax[1], bmax[2])
+        mesh = geom.Mesh(material_id, meshes_total_nb_faces, len(faces), M, M_inv, bbox_min, bbox_max)
         meshes_total_nb_verts += len(verts)
         meshes_total_nb_faces += len(faces)
         return mesh

@@ -29,6 +29,7 @@ class Material:
     diffuse: tm.vec3    # kd diffuse coefficient, modulates texture if texture present
     specular: tm.vec3    # ks specular coefficient
     shininess: float    # specular exponent
+    reflectivity: float  # reflectivity coefficient
 
 @ti.dataclass
 class Light:
