@@ -32,8 +32,9 @@ def intersectSphere(sphere: Sphere, ray: Ray, t_min: float, t_max: float) -> Int
     '''
 
     hit = Intersection() # default is no intersection (is_hit = False)
+    ray = changeRayFrame(ray, sphere.M_inv) # transform ray to local space of sphere
 
-    # TODO: Objective 2: Implement ray-sphere intersection
+    # Objective 2: Implement ray-sphere intersection
 
     a = tm.dot(ray.direction, ray.direction)
     b = 2 * tm.dot(ray.direction, ray.origin)
@@ -54,6 +55,9 @@ def intersectSphere(sphere: Sphere, ray: Ray, t_min: float, t_max: float) -> Int
             hit.position = getRayPoint(ray, hit.t)
             hit.normal = tm.normalize(hit.position)
             hit.mat = sphere.material_id
+
+    if hit.is_hit:
+        hit = changeIntersectFrame(hit, sphere.M, sphere.M_inv) # transform intersection back to world space
 
     return hit
 
@@ -89,8 +93,24 @@ def intersectPlane(plane: Plane, ray: Ray, t_min: float, t_max: float) -> Inters
 
     hit = Intersection() # default is no intersection (is_hit = False)
 
-    # TODO: Objective 5: Implement ray-plane intersection
+    # Objective 5: Implement ray-plane intersection
+    ray = changeRayFrame(ray, plane.M_inv) # transform ray to local space of plane
 
+    n = plane.normal
+    denom = tm.dot(n, ray.direction)
+
+    if abs(denom) > EPSILON:  # Check if the ray is not parallel to the plane
+        t = -tm.dot(n, ray.origin) / denom
+        if t >= t_min and t <= t_max:
+            hit.is_hit = True
+            hit.t = t
+            hit.position = getRayPoint(ray, hit.t)
+            hit.normal = n
+            hit.mat = plane.material_id
+            hit.texture_coords = tm.vec3(hit.position.x, hit.position.z, 0.0)  # local x, z -> (u,v) 
+
+    if hit.is_hit:
+        hit = changeIntersectFrame(hit, plane.M, plane.M_inv) # transform intersection back to world space
 
     return hit
 

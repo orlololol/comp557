@@ -197,6 +197,7 @@ class Scene:
             light_dir = tm.vec3(0,0,0)
             dist = 0.0
             attenuation = 1.0
+            t_max = float('inf')
             # compute the direction from the intersection point to the light source
             if light.ltype == 1: # point light
                 to_light = light.vector - intersect.position
@@ -206,24 +207,29 @@ class Scene:
                 lin = light.attenuation.y # linear term
                 c = light.attenuation.z # constant term
                 attenuation = 1.0 / (q * dist * dist + lin * dist + c) # quadratic attenuation
+                t_max = dist
 
             else: # directional light
                 light_dir = light.vector
                 attenuation = 1.0
+                t_max = float('inf')
 
+            # Objective 6: Implement shadow rays
+            shadow_ray = Ray(intersect.position, light_dir)
+            shadow_hit = self.intersect_scene(shadow_ray, shadow_epsilon, t_max)
 
-            # TODO: Objective 6: Implement shadow rays
+            if not shadow_hit.is_hit:
+                # if shadow ray dont hit anything, compute diffuse and specular shading
+                n_dot_l = tm.dot(intersect.normal, light_dir)
+                h = tm.normalize(light_dir - ray.direction)
+                n_dot_h = max(0.0, tm.dot(intersect.normal, h))
+                ks = material.specular
+                alpha = material.shininess
 
-            n_dot_l = tm.dot(intersect.normal, light_dir)
-            h = tm.normalize(light_dir - ray.direction)
-            n_dot_h = max(0.0, tm.dot(intersect.normal, h))
-            ks = material.specular
-            alpha = material.shininess
-
-            if n_dot_l > 0:
-                diffuse = kd * n_dot_l * light.colour
-                specular = ks * (n_dot_h ** alpha) * light.colour
-                sample_colour += attenuation * (diffuse + specular)
+                if n_dot_l > 0:
+                    diffuse = kd * n_dot_l * light.colour
+                    specular = ks * (n_dot_h ** alpha) * light.colour
+                    sample_colour += attenuation * (diffuse + specular)
 
         return sample_colour
     
