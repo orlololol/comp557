@@ -1,0 +1,36 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": 128,
+  "ambient": [0.1, 0.1, 0.1],
+  "camera": {
+    "position": [0.0, 2.5, 8.0],
+    "lookAt": [0.0, 0.7, -1.0],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0,
+    "aperture": 0.2
+  },
+  "textures": [
+    { "name": "checkerboard", "filepath": "./textures/black-white-2x2.png" }
+  ],
+  "materials": [
+    { "name": "red",    "diffuse": [1, 0, 0],     "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "yellow", "diffuse": [1, 0.8, 0],   "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "green",  "diffuse": [0, 0.8, 0],   "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "cyan",   "diffuse": [0, 0.7, 0.9], "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "blue",   "diffuse": [0.1, 0.1, 1], "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "bw", "texture": "checkerboard", "specular": [0.0, 0.0, 0.0], "shininess": 0 }
+  ],
+  "objects": [
+    { "name": "plane", "type": "plane", "normal": [0.0, 1.0, 0.0], "position": [0.0, 0.0, 0.0], "material": "bw" },
+    { "name": "s0", "type": "sphere", "radius": 0.7, "position": [-2.4, 0.7,  4.0], "material": "red" },
+    { "name": "s1", "type": "sphere", "radius": 0.7, "position": [-1.2, 0.7,  1.5], "material": "yellow" },
+    { "name": "s2", "type": "sphere", "radius": 0.7, "position": [ 0.0, 0.7, -1.0], "material": "green" },
+    { "name": "s3", "type": "sphere", "radius": 0.7, "position": [ 1.2, 0.7, -3.5], "material": "cyan" },
+    { "name": "s4", "type": "sphere", "radius": 0.7, "position": [ 2.4, 0.7, -6.0], "material": "blue" }
+  ],
+  "lights": [
+    { "name": "light1", "type": "point", "position": [10, 10, 10], "colour": [0.8, 0.8, 0.8], "attenuation": [1, 0, 0], "power": 300 },
+    { "name": "light2", "type": "point", "position": [-10, 10, 2], "colour": [0.8, 0.8, 0.8], "attenuation": [1, 0, 0], "power": 300 }
+  ]
+}

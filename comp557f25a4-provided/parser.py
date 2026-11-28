@@ -44,7 +44,9 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
     cam_lookat = glm.vec3(data["camera"]["lookAt"])
     cam_up = glm.vec3(data["camera"]["up"])
     cam_fovy = data["camera"]["fovy"]
-    camera = Camera(width, height, cam_pos, cam_lookat, cam_up, cam_fovy, jitter, samples)
+    cam_aperture = data["camera"].get("aperture", 0.0) # lens radius for depth of field
+    cam_focus = data["camera"].get("focus_distance", None) # defaults to distance to lookAt
+    camera = Camera(width, height, cam_pos, cam_lookat, cam_up, cam_fovy, jitter, samples, cam_aperture, cam_focus)
 
     # Loading ambient light
     ambient = tm.vec3(data.get("ambient", [0.1, 0.1, 0.1])) # set a reasonable default ambient light

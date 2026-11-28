@@ -8,7 +8,7 @@ import taichi.math as tm
 
 @ti.data_oriented
 class Camera:
-	def __init__(self, width, height, eye_position:glm.vec3, lookat:glm.vec3, up:glm.vec3, fovy, jitter:bool=False, samples:int=1) -> None:
+	def __init__(self, width, height, eye_position:glm.vec3, lookat:glm.vec3, up:glm.vec3, fovy, jitter:bool=False, samples:int=1, aperture:float=0.0, focus_distance=None) -> None:
 		'''	Initialize the camera with given parameters.
 		Args:
 			width (int): width of the image in pixels
@@ -31,6 +31,9 @@ class Camera:
 		self.distance_to_plane = 1.0
 		self.jitter = jitter
 		self.samples = samples
+		self.aperture = aperture # lens radius for depth of field, 0 = pinhole
+		if focus_distance is None: focus_distance = glm.length(lookat - eye_position) # default focus on the lookAt point
+		self.focus_distance = focus_distance
 
 		# Objective 1: Compute camera frame basis vectors, and top bottom left right for ray generation
 		# NOTE: glm vectors are passed in to permit the work to be done here in python, but stored vectors must be tm.vec3
@@ -81,7 +84,13 @@ class Camera:
 
 		s = self.left + (self.right - self.left) * (x + offset_x) / self.width
 		t = self.bottom + (self.top - self.bottom) * (y + offset_y) / self.height
-		point = self.eye_position + s * self.u + t * self.v - self.w * self.distance_to_plane
-		d = tm.normalize(point - self.eye_position)
+		# image plane scaled to the focus distance, so all lens samples meet there
+		point = self.eye_position + self.focus_distance * (s * self.u + t * self.v - self.w * self.distance_to_plane)
+		origin = self.eye_position
+		if self.aperture > 0: # random point on the lens disk (polar, sqrt for uniform density)
+			r = self.aperture * ti.sqrt(ti.random())
+			theta = 2.0 * tm.pi * ti.random()
+			origin = self.eye_position + r * ti.cos(theta) * self.u + r * ti.sin(theta) * self.v
+		d = tm.normalize(point - origin)
 
-		return Ray( self.eye_position, d )  # temporary ray
+		return Ray( origin, d )  # temporary ray
