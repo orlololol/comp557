@@ -150,10 +150,27 @@ class Scene:
                 hit = self.intersect_scene(ray, t_min, float('inf'))
                 if not hit.is_hit: break # no more intersections, so break out of the loop
                 sample_colour += throughput * self.compute_shading(hit, ray)
-                throughput *= self.material_field[hit.mat].reflectivity
-                if throughput < 0.01: break # terminate if throughput is too low
+                mat = self.material_field[hit.mat]
+                new_dir = tm.vec3(0.0, 0.0, 0.0)
+                keep_going = False
+                if mat.transparency > 0: # refraction
+                    throughput *= mat.transparency
+                    n = hit.normal
+                    eta = 1.0 / mat.ior # entering: air -> material
+                    if tm.dot(ray.direction, n) > 0: # exiting: material -> air
+                        n = -n
+                        eta = mat.ior
+                    new_dir = tm.refract(ray.direction, n, eta)
+                    if tm.length(new_dir) < 1e-6: # total internal reflection
+                        new_dir = tm.reflect(ray.direction, n)
+                    keep_going = True
+                elif mat.reflectivity > 0: # mirror reflection
+                    throughput *= mat.reflectivity
+                    new_dir = tm.reflect(ray.direction, hit.normal) # reflect the ray direction
+                    keep_going = True
+                if not keep_going or throughput < 0.01: break # terminate if not reflective or refractive or throughput is too low
                 ray.origin = hit.position
-                ray.direction = tm.reflect(ray.direction, hit.normal) # reflect the ray direction
+                ray.direction = tm.normalize(new_dir)
                 t_min = shadow_epsilon # set t_min for the next intersection test
 
             self.image[x,y] += (sample_colour - self.image[x,y]) / self.iter_counter[None] 

@@ -109,9 +109,11 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
         mat_specular = tm.vec3(0,0,0) if "specular" not in material else tm.vec3(material["specular"])
         mat_shininess = 0 if "shininess" not in material else material["shininess"]
         mat_reflectivity = 0 if "reflectivity" not in material else material["reflectivity"]
+        mat_transparency = 0 if "transparency" not in material else material["transparency"]
+        mat_ior = 1.0 if "ior" not in material else material["ior"]
         material_id_by_name[mat_name] = len(materials)  
 
-        materials.append(Material(mat_texture_id, mat_diffuse, mat_specular, mat_shininess, mat_reflectivity))
+        materials.append(Material(mat_texture_id, mat_diffuse, mat_specular, mat_shininess, mat_reflectivity, mat_transparency, mat_ior))
 
     # load geometires
     objects = {"sphere": [],

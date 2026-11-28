@@ -30,6 +30,8 @@ class Material:
     specular: tm.vec3    # ks specular coefficient
     shininess: float    # specular exponent
     reflectivity: float  # reflectivity coefficient
+    transparency: float  # fraction of light passing through (refraction)
+    ior: float           # index of refraction
 
 @ti.dataclass
 class Light:
