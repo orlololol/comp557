@@ -1,0 +1,33 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": 32,
+  "ambient": [0.1, 0.1, 0.1],
+  "camera": {
+    "position": [0.0, 4.0, 7.0],
+    "lookAt": [0.0, 1.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0
+  },
+  "textures": [
+    { "name": "checkerboard", "filepath": "./textures/black-white-2x2.png" }
+  ],
+  "materials": [
+    { "name": "red",    "diffuse": [1, 0, 0],     "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "yellow", "diffuse": [1, 0.8, 0],   "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "green",  "diffuse": [0, 0.8, 0.2], "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "mirror", "diffuse": [0.1, 0.1, 0.1], "specular": [0.5, 0.5, 0.5], "shininess": 64, "reflectivity": 0.8 },
+    { "name": "bw", "texture": "checkerboard", "specular": [0.0, 0.0, 0.0], "shininess": 0 }
+  ],
+  "objects": [
+    { "name": "plane", "type": "plane", "normal": [0.0, 1.0, 0.0], "position": [0.0, 0.0, 0.0], "material": "bw" },
+    { "name": "cylinder", "type": "cylinder", "position": [-2.0, 0.0, 0.0], "scale": [0.6, 2.0, 0.6], "material": "red" },
+    { "name": "cone", "type": "cone", "position": [0.0, 0.0, -1.0], "scale": [0.8, 2.2, 0.8], "material": "yellow" },
+    { "name": "tilted", "type": "cylinder", "position": [1.8, 0.5, 0.5], "rotation": [0, 0, 60], "scale": [0.4, 1.6, 0.4], "material": "green" },
+    { "name": "mirrorCylinder", "type": "cylinder", "position": [0.3, 0.0, 1.8], "scale": [0.5, 0.8, 0.5], "material": "mirror" }
+  ],
+  "lights": [
+    { "name": "light1", "type": "point", "position": [10, 10, 10], "colour": [0.8, 0.8, 0.8], "attenuation": [1, 0, 0], "power": 300 },
+    { "name": "light2", "type": "point", "position": [-10, 10, 2], "colour": [0.8, 0.8, 0.8], "attenuation": [1, 0, 0], "power": 300 }
+  ]
+}

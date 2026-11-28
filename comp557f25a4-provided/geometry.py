@@ -233,3 +233,72 @@ def intersectMesh(mesh: Mesh,                  # data for this mesh (start face 
     if out_intersect.is_hit:
         out_intersect = changeIntersectFrame(out_intersect, mesh.M, mesh.M_inv) # transform intersection back to world space
     return out_intersect
+
+
+# similar to Mesh class
+@ti.dataclass
+class Quadric:
+    material_id: int
+    kind: int       # 0 = cylinder x^2+z^2=1, 1 = cone x^2+z^2=(1-y)^2
+    M: tm.mat4
+    M_inv: tm.mat4
+
+@ti.func
+def intersectQuadric(quadric: Quadric, ray: Ray, t_min: float, t_max: float) -> Intersection:
+    hit = Intersection() # default is no intersection (is_hit = False)
+    ray = changeRayFrame(ray, quadric.M_inv) # transform ray to local space of the quadric
+    o = ray.origin
+    d = ray.direction
+
+    # side surface: substitute o + t d into the implicit equation -> a t^2 + b t + c = 0
+    a = d.x * d.x + d.z * d.z
+    b = 2.0 * (o.x * d.x + o.z * d.z)
+    c = o.x * o.x + o.z * o.z - 1.0
+    if quadric.kind == 1: # cone: subtract (1-y)^2 = (k - d.y t)^2 with k = 1 - o.y
+        k = 1.0 - o.y
+        a -= d.y * d.y
+        b += 2.0 * k * d.y
+        c = o.x * o.x + o.z * o.z - k * k
+
+    best_t = t_max
+    normal = tm.vec3(0.0, 0.0, 0.0)
+    if abs(a) > EPSILON:
+        disc = b * b - 4.0 * a * c
+        if disc >= 0:
+            sq = ti.sqrt(disc)
+            roots = tm.vec2((-b - sq) / (2.0 * a), (-b + sq) / (2.0 * a))
+            for j in ti.static(range(2)): # either root may be the valid one after clipping
+                t = roots[j]
+                if t >= t_min and t <= best_t:
+                    p = o + t * d
+                    if p.y >= 0.0 and p.y <= 1.0: # clip to the height of the shape
+                        best_t = t
+                        hit.is_hit = True
+                        if quadric.kind == 0:
+                            normal = tm.vec3(p.x, 0.0, p.z) # gradient of x^2+z^2-1
+                        else:
+                            normal = tm.vec3(p.x, 1.0 - p.y, p.z) # gradient of x^2+z^2-(1-y)^2
+
+    # caps: bottom disk at y = 0 (both shapes), top disk at y = 1 (cylinder only)
+    if abs(d.y) > EPSILON:
+        t = -o.y / d.y
+        p = o + t * d
+        if t >= t_min and t <= best_t and p.x * p.x + p.z * p.z <= 1.0:
+            best_t = t
+            hit.is_hit = True
+            normal = tm.vec3(0.0, -1.0, 0.0)
+        if quadric.kind == 0:
+            t = (1.0 - o.y) / d.y
+            p = o + t * d
+            if t >= t_min and t <= best_t and p.x * p.x + p.z * p.z <= 1.0:
+                best_t = t
+                hit.is_hit = True
+                normal = tm.vec3(0.0, 1.0, 0.0)
+
+    if hit.is_hit:
+        hit.t = best_t
+        hit.position = getRayPoint(ray, best_t)
+        hit.normal = tm.normalize(normal)
+        hit.mat = quadric.material_id
+        hit = changeIntersectFrame(hit, quadric.M, quadric.M_inv) # transform intersection back to world space
+    return hit

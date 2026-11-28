@@ -27,6 +27,8 @@ class Scene:
         self.aaboxes = geom.AABox.field(shape=(30))
         self.nb_meshes = ti.field(dtype=int, shape=())
         self.meshes = geom.Mesh.field(shape=(5))
+        self.nb_quadrics = ti.field(dtype=int, shape=())
+        self.quadrics = geom.Quadric.field(shape=(10))
         self.nb_lights = ti.field(dtype=int, shape=())
         self.lights = Light.field(shape=(5))
         self.meshes_verts = ti.Vector.field(3, shape=(10000), dtype=float)
@@ -102,6 +104,13 @@ class Scene:
             print("Warning: reallocating meshes field to larger size")
             self.meshes = geom.Mesh.field(shape=(self.nb_meshes[None]))
         for i,m in enumerate(objects["mesh"]): self.meshes[i] = m
+
+        quadrics = objects["cylinder"] + objects["cone"]
+        self.nb_quadrics[None] = len(quadrics)
+        if self.nb_quadrics[None] > self.quadrics.shape[0]:
+            print("Warning: reallocating quadrics field to larger size")
+            self.quadrics = geom.Quadric.field(shape=(self.nb_quadrics[None]))
+        for i,q in enumerate(quadrics): self.quadrics[i] = q
 
         print("done with geometry")     
 
@@ -195,6 +204,10 @@ class Scene:
         ti.loop_config(serialize=True) 
         for i in range(self.nb_meshes[None]):
             hit = geom.intersectMesh(self.meshes[i], self.meshes_verts, self.meshes_faces, ray, t_min, t_max)
+            if hit.is_hit: best = hit; t_max = hit.t
+        ti.loop_config(serialize=True) 
+        for i in range(self.nb_quadrics[None]):
+            hit = geom.intersectQuadric(self.quadrics[i], ray, t_min, t_max)
             if hit.is_hit: best = hit; t_max = hit.t
         return best
 

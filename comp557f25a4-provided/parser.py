@@ -122,7 +122,9 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
     objects = {"sphere": [],
                "plane": [],
                "box": [],
-               "mesh": []}  # lists of loaded object geometries and hierarchy roots
+               "mesh": [],
+               "cylinder": [],
+               "cone": []}  # lists of loaded object geometries and hierarchy roots
     node_by_name = {}  # dictionary of geometries by name (for instances)
 
     M_parent = tm.mat4(np.eye(4))  # identity matrix as the initial parent transformation
@@ -195,6 +197,9 @@ def load_geometry(geometry, material_id_by_name, M_parent: tm.mat4 ):
         g_normal = tm.vec3(geometry.get("normal",[0,1,0]))
         M, M_inv = load_geometry_transformation_matrix(geometry, M_parent)
         return geom.Plane(material_id, g_normal, M, M_inv)
+    elif type == "cylinder" or type == "cone":
+        M, M_inv = load_geometry_transformation_matrix(geometry, M_parent)
+        return geom.Quadric(material_id, 0 if type == "cylinder" else 1, M, M_inv)
     elif type == "box":
         minpos = tm.vec3(geometry.get("min",[-1,-1,-1]))
         maxpos = tm.vec3(geometry.get("max",[1,1,1]))
