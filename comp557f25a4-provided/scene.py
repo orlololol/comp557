@@ -227,7 +227,12 @@ class Scene:
             t_max = float('inf')
             # compute the direction from the intersection point to the light source
             if light.ltype == 1: # point light
-                to_light = light.vector - intersect.position
+                # for area light aim at a random point on the light's sphere (radius 0 = the centre)
+                z = 2.0 * ti.random() - 1.0
+                phi = 2.0 * tm.pi * ti.random()
+                rxy = ti.sqrt(1.0 - z * z)
+                light_pos = light.vector + light.radius * tm.vec3(rxy * ti.cos(phi), rxy * ti.sin(phi), z)
+                to_light = light_pos - intersect.position
                 dist = tm.length(to_light)
                 light_dir = tm.normalize(to_light)
                 q = light.attenuation.x # quadratic term

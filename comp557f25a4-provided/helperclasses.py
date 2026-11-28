@@ -39,6 +39,7 @@ class Light:
     colour: tm.vec3   # colour and intensity of the light
     vector: tm.vec3    # position, or normalized direction towards light, depending on the light type
     attenuation: tm.vec3   # attenuation coeffs [quadratic, linear, constant] for point lights
+    radius: float    # radius of a spherical area light (0 = point light, hard shadows)
 
 @ti.dataclass 
 class Intersection: # All fields will be set to zero on creation, otherwise specified in this order on construction

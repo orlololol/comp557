@@ -58,6 +58,7 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
         l_name = light["name"]
         l_colour = tm.vec3(light["colour"])
         l_power = light.get( "power", 1.0 ) # The power scales the specified light colour
+        l_radius = light.get( "radius", 0.0 ) # area light radius, 0 = hard shadows
         if l_type == "point":
             l_vector = tm.vec3(light["position"])
             l_attenuation = tm.vec3(0,0,1) if "attenuation" not in light else tm.vec3( light["attenuation"] )
@@ -71,7 +72,7 @@ def load_scene(infile: str, image_scale_factor: float, scene: Scene):
         else:
             print("Unkown light type", l_type, ", skipping initialization")
             continue
-        lights.append(Light(l_type, l_colour * l_power, l_vector, l_attenuation))
+        lights.append(Light(l_type, l_colour * l_power, l_vector, l_attenuation, l_radius))
 
     # Loading textures
     textures = []

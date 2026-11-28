@@ -1,0 +1,36 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": 128,
+  "ambient": [0.1, 0.1, 0.1],
+  "camera": {
+    "position": [0.0, 4.0, 7.0],
+    "lookAt": [0.0, 1.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0
+  },
+  "textures": [
+    { "name": "checkerboard", "filepath": "./textures/black-white-2x2.png" }
+  ],
+  "materials": [
+    { "name": "red",  "diffuse": [1, 0, 0],     "specular": [0.5, 0.5, 0.5], "shininess": 50 },
+    { "name": "blue", "diffuse": [0.2, 0.3, 1], "specular": [0.3, 0.3, 0.3], "shininess": 20 },
+    { "name": "floor", "diffuse": [0.9, 0.9, 0.9], "specular": [0.0, 0.0, 0.0], "shininess": 0 }
+  ],
+  "objects": [
+    { "name": "plane", "type": "plane", "normal": [0.0, 1.0, 0.0], "position": [0.0, 0.0, 0.0], "material": "floor" },
+    { "name": "floating", "type": "sphere", "radius": 0.8, "position": [-0.8, 1.8, 0.0], "material": "red" },
+    { "name": "box", "type": "box", "min": [-0.6, 0.0, -0.6], "max": [0.6, 1.2, 0.6], "position": [1.6, 0.0, -0.5], "rotation": [0, 30, 0], "material": "blue" }
+  ],
+  "lights": [
+    {
+      "name": "arealight",
+      "type": "point",
+      "position": [-2.0, 6.0, 2.0],
+      "colour": [1.0, 1.0, 1.0],
+      "attenuation": [1, 0, 0],
+      "power": 50,
+      "radius": 1.5
+    }
+  ]
+}
