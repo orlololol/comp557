@@ -1,3 +1,4 @@
+# Orlando Qiu 261175512
 import geometry as geom
 from helperclasses import Ray, Intersection, Light, Material
 from camera import Camera
@@ -8,7 +9,7 @@ import taichi as ti
 import taichi.math as tm
 
 shadow_epsilon = 10**(-2)
-MAX_BOUNCES = 5
+MAX_BOUNCES = 15
 
 @ti.data_oriented
 class Scene:

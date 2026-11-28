@@ -1,0 +1,19 @@
+Title: Infinite Bunny
+
+Description:
+A golden bunny sits in a corridor between two parallel mirrors. The camera looks into
+one of the mirrors at an angle, so the bunny repeats again and again, fading and blurring as the
+copies recede into the reflection.
+
+Technical achievements:
+- Mirror reflection: an iterative bounce loop (up to 15 bounces) follows rays back and forth between
+  the two mirror walls. Each bounce multiplies the throughput by the mirror's reflectivity (0.85),
+  so every copy of the bunny is a little dimmer than the previous one.
+- Depth of field: a thin-lens camera focused on the real bunny. Reflected copies travel a longer
+  light path, so they fall further out of focus the deeper they are in the mirror.
+- Soft shadows: a light above gives soft shadows under the bunny.
+
+Artistic motivation:
+While doing the reflection part, it reminded me of my elevator where it looks like I was in an 
+infinite space. So I decided to put two mirrors facing each other, turning a single 
+bunny into a whole line of them, and depth of field makes the reflections drift out of focus.

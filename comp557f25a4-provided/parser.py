@@ -1,3 +1,4 @@
+# Orlando Qiu 261175512
 from PIL import Image
 import json5 as json
 from helperclasses import Material, Light

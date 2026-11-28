@@ -1,0 +1,31 @@
+{
+  "resolution": [960, 540],
+  "AA_jitter": true,
+  "AA_samples": 128,
+  "ambient": [0.08, 0.08, 0.08],
+  "camera": {
+    "position": [1.2, 1.6, 4.5],
+    "lookAt": [-1.8, 0.8, -0.5],
+    "up": [0.0, 1.0, 0.0],
+    "fovy": 45.0,
+    "aperture": 0.06,
+    "focus_distance": 4.8
+  },
+  "textures": [
+    { "name": "checker", "filepath": "./textures/blue-green-2x2.png" }
+  ],
+  "materials": [
+    { "name": "floor",  "texture": "checker", "specular": [0.0, 0.0, 0.0], "shininess": 0 },
+    { "name": "bunny",  "diffuse": [0.95, 0.75, 0.3], "specular": [0.6, 0.6, 0.6], "shininess": 40 },
+    { "name": "mirror", "diffuse": [0.02, 0.02, 0.03], "specular": [0.3, 0.3, 0.3], "shininess": 100, "reflectivity": 0.85 }
+  ],
+  "objects": [
+    { "name": "floor", "type": "plane", "normal": [0.0, 1.0, 0.0], "position": [0.0, 0.0, 0.0], "material": "floor" },
+    { "name": "leftMirror",  "type": "box", "min": [-0.05, 0.0, -10.0], "max": [0.05, 3.0, 10.0], "position": [-1.8, 0.0, 0.0], "material": "mirror" },
+    { "name": "rightMirror", "type": "box", "min": [-0.05, 0.0, -10.0], "max": [0.05, 3.0, 10.0], "position": [ 1.8, 0.0, 0.0], "material": "mirror" },
+    { "name": "bunny", "type": "mesh", "filepath": "./meshes/bunny.obj", "position": [0.0, 0.615, 0.0], "rotation": [0, 30, 0], "material": "bunny" }
+  ],
+  "lights": [
+    { "name": "overhead", "type": "point", "position": [0.0, 5.0, 2.0], "colour": [1.0, 0.95, 0.9], "attenuation": [1, 0, 0], "power": 45, "radius": 0.8 }
+  ]
+}

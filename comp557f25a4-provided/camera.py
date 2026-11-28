@@ -1,3 +1,4 @@
+# Orlando Qiu 261175512
 
 from numpy import tan
 
